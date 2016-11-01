@@ -38,10 +38,18 @@
     "scripts": {
         "post-install-cmd": [
             "@composer drupal-scaffold",
-            "./bin/phing push"
+            "@composer push"
         ],
         "post-update-cmd": [
-            "./bin/phing push"
+            "@composer push",
+            "./package"
+        ],
+        "push": [
+            "mkdir -p ./docroot/profiles/lightning/libraries",
+            "rsync --archive --exclude=\"/.*\" --exclude=\"/bin\" --exclude=\"/docroot\" --exclude=\"/git-hooks\" --exclude=\"/vendor\" --exclude=\"/build.xml\" --exclude=\"/*.log\" --exclude=\"/package\" --exclude=\"/composer.json\" --exclude=\"/composer.lock\" --exclude=\"/*.make\" . ./docroot/profiles/lightning",
+            "cp -R ./vendor/npm-asset/* ./docroot/profiles/lightning/libraries 2> /dev/null | true",
+            "cp -R ./vendor/bower-asset/* ./docroot/profiles/lightning/libraries 2> /dev/null | true",
+            "rm -rf ./modules/contrib"
         ],
         "drupal-scaffold": "DrupalComposer\\DrupalScaffold\\Plugin::scaffold"
     },

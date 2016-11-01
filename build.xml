@@ -34,18 +34,6 @@
     <echo message="Found rsync: ${rsync}" />
   </target>
 
-  <!-- Syncs the Lightning profile into the Drupal code base. -->
-  <target name="push" depends="env">
-    <!-- Create the destination if it doesn't exist. -->
-    <mkdir dir="${profile}" />
-
-    <!-- rsync the profile, excluding developer flotsam. -->
-    <filesync destinationDir="${profile}" rsyncPath="${rsync}" sourceDir="." verbose="false" exclude=".idea,bin,build.xml,.git,.gitignore,${docroot},karma.conf.js,*.make,.travis.yml,vendor" />
-
-    <!-- Contrib modules were copied over by the file sync. -->
-    <delete dir="modules/contrib" failonerror="true" quiet="true" />
-  </target>
-
   <target name="pull" depends="env">
     <filesync destinationDir="." rsyncPath="${rsync}" sourceDir="${profile}/" verbose="false" exclude="libraries,modules/contrib,behat.local.yml" />
   </target>

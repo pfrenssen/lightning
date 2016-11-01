@@ -94,10 +94,15 @@ $encoder = new IniEncoder();
 
 $make = \Symfony\Component\Yaml\Yaml::parse(`./bin/drush make-convert composer.lock`);
 
-// TODO: drush make-convert considers non-Drupal Composer dependencies to be
-// libraries. Since we're using Asset Packagist, this is only true if the
-// package vendor is npm-asset or bower-asset.
-unset($make['libraries']);
+// The keys of $make['libraries'], if it exists, will be prefixed with the
+// vendor. That needs to be iced in a make file.
+if (isset($make['libraries'])) {
+  foreach ($make['libraries'] as $package => $info) {
+    list (, $key) = explode('/', $package);
+    $make['libraries'][$key] = $info;
+    unset($make['libraries'][$package]);
+  }
+}
 
 if (isset($make['projects']['drupal'])) {
   // Always use drupal.org's core repository, or patches will not apply.

@@ -46,19 +46,12 @@
         "drupal-scaffold": "DrupalComposer\\DrupalScaffold\\Plugin::scaffold"
     },
     "extra": {
-        "installer-types": [
-            "library"
-        ],
         "installer-paths": {
             "docroot/core": [
                 "drupal/core"
             ],
             "modules/contrib/{$name}": [
                 "type:drupal-module"
-            ],
-            "libraries/{$name}": [
-                "vendor:bower-asset",
-                "vendor:npm-asset"
             ]
         },
         "patches": {
@@ -152,7 +145,7 @@
         "drupal/views_infinite_scroll": "^8.1.1",
         "drupal/media_entity_document": "^8.1.0",
         "drupal/video_embed_field": "^8.1.0",
-        "oomphinc/composer-installers-extender": "^1.1"
+        "composer/installers": "^1.2"
     },
     "autoload": {
         "psr-4": {

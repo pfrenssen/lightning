@@ -16,7 +16,7 @@
   <property name="version" value="HEAD" />
   <property name="module" value="lightning_preview" />
 
-  <!-- Finds Composer, NPM, and rsync. -->
+  <!-- Finds Drush, Composer, and rsync. -->
   <target name="env">
     <if>
       <not>
@@ -42,8 +42,7 @@
     <!-- rsync the profile, excluding developer flotsam. -->
     <filesync destinationDir="${profile}" rsyncPath="${rsync}" sourceDir="." verbose="false" exclude=".idea,bin,build.xml,.git,.gitignore,${docroot},karma.conf.js,*.make,.travis.yml,vendor" />
 
-    <!-- JS libraries and contrib modules were copied over by the file sync. -->
-    <delete dir="libraries" failonerror="true" quiet="true" />
+    <!-- Contrib modules were copied over by the file sync. -->
     <delete dir="modules/contrib" failonerror="true" quiet="true" />
   </target>
 

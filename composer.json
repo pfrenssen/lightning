@@ -51,6 +51,11 @@
             "cp -R ./vendor/bower-asset/* ./docroot/profiles/lightning/libraries 2> /dev/null | true",
             "rm -rf ./modules/contrib"
         ],
+        "uninstall-drupal": [
+            "chmod -R 755 ./docroot/sites/default 2> /dev/null | true",
+            "rm -rf ./docroot/sites/default/settings.php ./docroot/sites/default/files"
+        ],
+        "destroy-drupal": "rm -rf ./bin ./docroot ./vendor",
         "drupal-scaffold": "DrupalComposer\\DrupalScaffold\\Plugin::scaffold"
     },
     "extra": {

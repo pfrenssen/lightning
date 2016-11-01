@@ -27,12 +27,10 @@
       </then>
     </if>
     <exec command="which composer" outputProperty="composer" />
-    <exec command="which npm" outputProperty="npm" />
     <exec command="which rsync" outputProperty="rsync" />
 
     <echo message="Found Drush: ${drush}" />
     <echo message="Found Composer: ${composer}" />
-    <echo message="Found NPM: ${npm}" />
     <echo message="Found rsync: ${rsync}" />
   </target>
 

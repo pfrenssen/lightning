@@ -18,3 +18,4 @@ components:
   - lightning_media_instagram
   - lightning_media_twitter
   - lightning_media_video
+version: 8.x-2.01

@@ -7,3 +7,4 @@ experimental: true
 dependencies:
   - lightning_workflow
   - workspace
+version: 8.x-2.01

@@ -11,3 +11,4 @@ dependencies:
   - panelizer
 components:
   - lightning_landing_page
+version: 8.x-2.01

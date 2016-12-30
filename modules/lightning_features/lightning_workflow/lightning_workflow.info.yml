@@ -8,4 +8,4 @@ dependencies:
   - lightning_core
   - scheduled_updates
   - workbench_moderation
-
+version: 8.x-2.01

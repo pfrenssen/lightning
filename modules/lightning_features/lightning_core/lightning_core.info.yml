@@ -14,3 +14,4 @@ dependencies:
 components:
   - lightning_contact_form
   - lightning_page
+version: 8.x-2.01

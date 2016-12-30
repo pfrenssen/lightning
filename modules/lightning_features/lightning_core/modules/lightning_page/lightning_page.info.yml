@@ -5,3 +5,4 @@ type: module
 description: 'Provides a "Basic Page" content type that is, indeed, very basic.'
 dependencies:
   - lightning_core
+version: 8.x-2.01

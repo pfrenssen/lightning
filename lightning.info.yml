@@ -40,3 +40,4 @@ dependencies:
 themes:
   - bartik
   - seven
+version: 8.x-2.01

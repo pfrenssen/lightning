@@ -131,11 +131,26 @@
   </target>
 
   <!-- Prepares Lightning for the drupal.org packaging system. -->
-  <target name="package">
+  <target name="package" depends="env">
     <!-- Create a symlink to the installed libraries so that the packaging script can scan 'em. -->
     <symlink target="${profile}/libraries" link="libraries" />
     <exec command="./package" />
     <delete file="libraries" />
+
+    <!-- If a version is passed, record it in the main info file. -->
+    <if>
+      <not>
+        <equals arg1="${version}" arg2="HEAD" />
+      </not>
+      <then>
+        <composer composer="${composer}" command="run">
+          <arg value="set-value" />
+          <arg value="version" />
+          <arg value="${version}" />
+          <arg file="lightning.info.yml" />
+        </composer>
+      </then>
+    </if>
   </target>
 
   <!-- Builds a Lightning code base from legacy Drush make files. -->

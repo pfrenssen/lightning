@@ -4,10 +4,7 @@ description: 'A fast and feature-rich Drupal distribution.'
 core: 8.x
 distribution:
   name: Lightning
-
-# Required modules
 dependencies:
-  # core
   - block_content
   - breakpoint
   - ckeditor
@@ -38,11 +35,8 @@ dependencies:
   - rdf
   - views
   - views_ui
-  # contrib
   - metatag
-  # Our own core functionality.
   - lightning_core
-
 themes:
   - bartik
   - seven

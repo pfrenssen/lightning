@@ -19,17 +19,10 @@ class EmbedCode extends EntityFormProxy {
   /**
    * {@inheritdoc}
    */
-  protected function getInputValue(FormStateInterface $form_state) {
-    return $form_state->getValue('embed_code');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
 
-    $form['embed_code'] = array(
+    $form['input'] = array(
       '#type' => 'textarea',
       '#placeholder' => $this->t('Enter a URL...'),
       '#attributes' => array(
@@ -53,7 +46,7 @@ class EmbedCode extends EntityFormProxy {
     $input = $this->getInputValue($form_state);
     $bundle = $this->bundleResolver->getBundle($input);
     if (empty($bundle)) {
-      $form_state->setError($form['widget']['embed_code'], 'This is not a valid URL or embed code.');
+      $form_state->setError($form['widget']['input'], 'This is not a valid URL or embed code.');
     }
   }
 

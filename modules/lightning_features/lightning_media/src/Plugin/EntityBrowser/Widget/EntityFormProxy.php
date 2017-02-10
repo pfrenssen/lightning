@@ -42,7 +42,9 @@ abstract class EntityFormProxy extends WidgetBase {
    *   The input value, ready for further processing. Nothing will be done with
    *   the value if it's empty.
    */
-  abstract protected function getInputValue(FormStateInterface $form_state);
+  protected function getInputValue(FormStateInterface $form_state) {
+    return $form_state->getValue('input');
+  }
 
   /**
    * EmbedCode constructor.

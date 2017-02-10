@@ -2,16 +2,18 @@
 
 namespace Drupal\lightning_media\Plugin\EntityBrowser\Widget;
 
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Utility\Token;
 use Drupal\entity_browser\WidgetValidationManager;
-use Drupal\file\Element\ManagedFile;
 use Drupal\lightning_media\BundleResolverInterface;
+use Drupal\lightning_media\Element\AjaxUpload;
 use Drupal\lightning_media\SourceFieldTrait;
 use Drupal\media_entity\MediaInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -101,9 +103,9 @@ class FileUpload extends EntityFormProxy {
    * {@inheritdoc}
    */
   protected function getInputValue(FormStateInterface $form_state) {
-    $value = $form_state->getValue('file');
+    $value = parent::getInputValue($form_state);
     if ($value) {
-      return $this->entityTypeManager->getStorage('file')->load($value[0]);
+      return $this->entityTypeManager->getStorage('file')->load($value);
     }
   }
 
@@ -127,20 +129,16 @@ class FileUpload extends EntityFormProxy {
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
 
-    /* $form['file'] = array(
-      '#type' => 'managed_file',
+    $form['input'] = [
+      '#type' => 'ajax_upload',
       '#title' => $this->t('File'),
       '#process' => [
-        [ManagedFile::class, 'processManagedFile'],
+        [AjaxUpload::class, 'process'],
         [$this, 'processInitialFileElement'],
       ],
       '#upload_validators' => [
         'file_validate_extensions' => [$this->getAllowedFileUploadExtensions()],
       ],
-    ); */
-    $form['file'] = [
-      '#type' => 'ajax_upload',
-      '#title' => $this->t('File'),
     ];
 
     return $form;
@@ -234,9 +232,13 @@ class FileUpload extends EntityFormProxy {
    *   The processed file element.
    */
   public function processInitialFileElement(array $element) {
-    $element['upload_button']['#ajax']['callback'] = [$this, 'onUpload'];
-    $element['remove_button']['#value'] = $this->t('Cancel');
-    $element['remove_button']['#ajax']['callback'] = [$this, 'onRemove'];
+    if ($element['#value']) {
+      $element['remove']['#ajax']['callback'] = [$this, 'onRemove'];
+      $element['remove']['#value'] = $this->t('Cancel');
+    }
+    else {
+      $element['upload']['#ajax']['callback'] = [$this, 'onUpload'];
+    }
     return $element;
   }
 
@@ -281,14 +283,18 @@ class FileUpload extends EntityFormProxy {
    *   The complete form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current form state.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current HTTP request.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The AJAX response.
    */
-  public function onUpload(array &$form, FormStateInterface $form_state, Request $request) {
-    $response = ManagedFile::uploadAjaxCallback($form, $form_state, $request);
+  public function onUpload(array &$form, FormStateInterface $form_state) {
+    $element = AjaxUpload::getSelf($form, $form_state);
+
+    $response = new AjaxResponse();
+
+    $selector = '#' . $element['#ajax']['wrapper'];
+    $command = new ReplaceCommand($selector, $element);
+    $response->addCommand($command);
 
     $complete_form = $form_state->getCompleteForm();
     $selector = '#' . $complete_form['widget']['ief_target']['#id'];
@@ -313,7 +319,13 @@ class FileUpload extends EntityFormProxy {
    *   The AJAX response.
    */
   public function onRemove(array &$form, FormStateInterface $form_state, Request $request) {
-    $response = ManagedFile::uploadAjaxCallback($form, $form_state, $request);
+    $element = AjaxUpload::getSelf($form, $form_state);
+
+    $response = new AjaxResponse();
+
+    $selector = '#' . $element['#ajax']['wrapper'];
+    $command = new ReplaceCommand($selector, $element);
+    $response->addCommand($command);
 
     $complete_form = $form_state->getCompleteForm();
     $selector = '#' . $complete_form['widget']['ief_target']['#id'];

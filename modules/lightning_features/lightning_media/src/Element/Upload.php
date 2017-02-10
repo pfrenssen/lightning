@@ -8,6 +8,8 @@ use Drupal\file\Entity\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
+ * A form element to handle file uploads.
+ *
  * @FormElement("upload")
  */
 class Upload extends FileElement {
@@ -27,6 +29,14 @@ class Upload extends FileElement {
     return $info;
   }
 
+  /**
+   * Validates the uploaded file.
+   *
+   * @param array $element
+   *   The element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   */
   public static function validate(array $element, FormStateInterface $form_state) {
     if ($element['#value']) {
       $file = File::load($element['#value']);

@@ -8,6 +8,8 @@ use Drupal\Core\Render\Element\FormElement;
 use Drupal\file\Entity\File;
 
 /**
+ * A form element for uploading or deleting files interactively.
+ *
  * @FormElement("interactive_upload")
  */
 class InteractiveUpload extends FormElement {
@@ -29,6 +31,12 @@ class InteractiveUpload extends FormElement {
     ];
   }
 
+  /**
+   * Processes the element.
+   *
+   * @param array $element
+   * @return array
+   */
   public static function process(array $element) {
     return $element['#value']
       ? static::processFile($element)
@@ -77,7 +85,7 @@ class InteractiveUpload extends FormElement {
     return $element;
   }
 
-  protected static function getSelf(array &$form, FormStateInterface $form_state) {
+  public static function getSelf(array &$form, FormStateInterface $form_state) {
     $trigger = $form_state->getTriggeringElement();
     return NestedArray::getValue($form, array_slice($trigger['#array_parents'], 0, -1));
   }

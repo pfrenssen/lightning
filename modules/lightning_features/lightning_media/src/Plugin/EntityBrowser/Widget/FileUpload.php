@@ -127,7 +127,7 @@ class FileUpload extends EntityFormProxy {
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
 
-    $form['file'] = array(
+    /* $form['file'] = array(
       '#type' => 'managed_file',
       '#title' => $this->t('File'),
       '#process' => [
@@ -137,7 +137,11 @@ class FileUpload extends EntityFormProxy {
       '#upload_validators' => [
         'file_validate_extensions' => [$this->getAllowedFileUploadExtensions()],
       ],
-    );
+    ); */
+    $form['file'] = [
+      '#type' => 'ajax_upload',
+      '#title' => $this->t('File'),
+    ];
 
     return $form;
   }

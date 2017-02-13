@@ -9,7 +9,6 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Utility\Token;
 use Drupal\entity_browser\WidgetValidationManager;
 use Drupal\file\FileInterface;
 use Drupal\lightning_media\BundleResolverInterface;
@@ -35,13 +34,6 @@ class FileUpload extends EntityFormProxy {
   use SourceFieldTrait;
 
   /**
-   * The token replacement service.
-   *
-   * @var Token
-   */
-  protected $token;
-
-  /**
    * FileUpload constructor.
    *
    * @param array $configuration
@@ -60,12 +52,9 @@ class FileUpload extends EntityFormProxy {
    *   The media bundle resolver.
    * @param AccountInterface $current_user
    *   The currently logged in user.
-   * @param Token $token
-   *   The token replacement service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityManagerInterface $entity_manager, WidgetValidationManager $widget_validation_manager, BundleResolverInterface $bundle_resolver, AccountInterface $current_user, Token $token) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityManagerInterface $entity_manager, WidgetValidationManager $widget_validation_manager, BundleResolverInterface $bundle_resolver, AccountInterface $current_user) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_manager, $widget_validation_manager, $bundle_resolver, $current_user);
-    $this->token = $token;
     $this->fieldStorage = $entity_manager->getStorage('field_config');
   }
 
@@ -83,8 +72,7 @@ class FileUpload extends EntityFormProxy {
       $container->get('entity.manager'),
       $container->get('plugin.manager.entity_browser.widget_validation'),
       $container->get('plugin.manager.lightning_media.bundle_resolver')->createInstance($bundle_resolver),
-      $container->get('current_user'),
-      $container->get('token')
+      $container->get('current_user')
     );
   }
 
@@ -188,33 +176,6 @@ class FileUpload extends EntityFormProxy {
   protected function getFile(MediaInterface $entity) {
     $field = $this->getSourceField($entity)->getName();
     return $entity->get($field)->entity;
-  }
-
-  /**
-   * Returns the expected permanent URI of the source file of a media entity.
-   *
-   * The permanent URI is computed from field configuration values and might
-   * change (i.e., FILE_EXISTS_RENAME) during file system operations.
-   *
-   * @param \Drupal\media_entity\MediaInterface $entity
-   *   The media entity.
-   *
-   * @return string
-   *   The expected permanent URI.
-   */
-  protected function getPermanentUri(MediaInterface $entity) {
-    $field = $this->getSourceField($entity);
-
-    $uri = '';
-    $uri .= $field->getFieldStorageDefinition()->getSetting('uri_scheme');
-    $uri .= '://';
-    $uri .= $this->token->replace($field->getSetting('file_directory'));
-    if (substr($uri, -3) != '://') {
-      $uri .= '/';
-    }
-    $uri .= $this->getFile($entity)->getFilename();
-
-    return $uri;
   }
 
   /**

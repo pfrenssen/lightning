@@ -12,6 +12,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Utility\Token;
 use Drupal\entity_browser\WidgetValidationManager;
+use Drupal\file\FileInterface;
+use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\lightning_media\BundleResolverInterface;
 use Drupal\lightning_media\Element\AjaxUpload;
 use Drupal\lightning_media\SourceFieldTrait;
@@ -137,11 +139,48 @@ class FileUpload extends EntityFormProxy {
         [$this, 'processInitialFileElement'],
       ],
       '#upload_validators' => [
-        'file_validate_extensions' => [$this->getAllowedFileUploadExtensions()],
+        'lightning_media_validate_upload' => [
+          $this->getPluginId(),
+          $this->getConfiguration(),
+        ],
       ],
     ];
 
     return $form;
+  }
+
+  /**
+   * Validates an uploaded file.
+   *
+   * @param \Drupal\file\FileInterface $file
+   *   The uploaded file.
+   *
+   * @return string[]
+   *   An array of errors. If empty, the file passed validation.
+   */
+  public function validateFile(FileInterface $file) {
+    $entity = $this->generateEntity($file);
+
+    if ($entity) {
+      $field = $this->getSourceField($entity)->getName();
+      /** @var \Drupal\file\Plugin\Field\FieldType\FileItem $item */
+      $item = $entity->get($field)->first();
+
+      $validators = $item->getUploadValidators();
+      if ($item instanceof ImageItem) {
+        $settings = $item->getFieldDefinition()->getSettings();
+        if ($settings['max_resolution'] || $settings['min_resolution']) {
+          $validators['file_validate_image_resolution'] = [
+            $settings['max_resolution'],
+            $settings['min_resolution'],
+          ];
+        }
+      }
+      return file_validate($file, $validators);
+    }
+    else {
+      return [];
+    }
   }
 
   /**

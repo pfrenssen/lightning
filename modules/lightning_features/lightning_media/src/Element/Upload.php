@@ -37,13 +37,35 @@ class Upload extends FileElement {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current form state.
    */
-  public static function validate(array $element, FormStateInterface $form_state) {
+  public static function validate(array &$element, FormStateInterface $form_state) {
     if ($element['#value']) {
       $file = File::load($element['#value']);
 
       $errors = file_validate($file, $element['#upload_validators']);
-      foreach ($errors as $error) {
-        $form_state->setError($element, (string) $error);
+      if ($errors) {
+        foreach ($errors as $error) {
+          $form_state->setError($element, (string) $error);
+        }
+        static::delete($element);
+      }
+    }
+  }
+
+  /**
+   * Deletes the file referenced by the element.
+   *
+   * @param array $element
+   *   The element. If set, its value should be a file entity ID.
+   */
+  public static function delete(array $element) {
+    if ($element['#value']) {
+      $file = File::load($element['#value']);
+      $file->delete();
+
+      // Clean up the file system if needed.
+      $uri = $file->getFileUri();
+      if (file_exists($uri)) {
+        \Drupal::service('file_system')->unlink($uri);
       }
     }
   }

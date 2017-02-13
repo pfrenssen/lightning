@@ -35,7 +35,10 @@ class InteractiveUpload extends FormElement {
    * Processes the element.
    *
    * @param array $element
+   *   The unprocessed element.
+   *
    * @return array
+   *   The processed element.
    */
   public static function process(array $element) {
     return $element['#value']
@@ -43,6 +46,15 @@ class InteractiveUpload extends FormElement {
       : static::processEmpty($element);
   }
 
+  /**
+   * Processes the element when there is a default value.
+   *
+   * @param array $element
+   *   The unprocessed element.
+   *
+   * @return array
+   *   The processed element.
+   */
   protected static function processFile(array $element) {
     $element['file'] = [
       '#theme' => 'file_link',
@@ -56,7 +68,7 @@ class InteractiveUpload extends FormElement {
       '#type' => 'submit',
       '#value' => t('Remove'),
       '#limit_validation_errors' => [
-        [$element['#parents']],
+        $element['#parents'],
       ],
       '#submit' => [
         [static::class, 'remove'],
@@ -65,6 +77,15 @@ class InteractiveUpload extends FormElement {
     return $element;
   }
 
+  /**
+   * Processes the element when there is no default value.
+   *
+   * @param array $element
+   *   The unprocessed element.
+   *
+   * @return array
+   *   The processed element.
+   */
   protected static function processEmpty(array $element) {
     $element['file'] = [
       '#type' => 'upload',
@@ -76,7 +97,7 @@ class InteractiveUpload extends FormElement {
       '#type' => 'submit',
       '#value' => t('Upload'),
       '#limit_validation_errors' => [
-        [$element['#parents']],
+        $element['#parents'],
       ],
       '#submit' => [
         [static::class, 'upload'],
@@ -85,11 +106,30 @@ class InteractiveUpload extends FormElement {
     return $element;
   }
 
+  /**
+   * Returns the root element for a triggering element.
+   *
+   * @param array $form
+   *   The complete form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @return array
+   *   The root element that contains the triggering element.
+   */
   public static function getSelf(array &$form, FormStateInterface $form_state) {
     $trigger = $form_state->getTriggeringElement();
     return NestedArray::getValue($form, array_slice($trigger['#array_parents'], 0, -1));
   }
 
+  /**
+   * Submit function when the Upload button is clicked.
+   *
+   * @param array $form
+   *   The complete form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   */
   public static function upload(array &$form, FormStateInterface $form_state) {
     $self = static::getSelf($form, $form_state);
 
@@ -99,19 +139,21 @@ class InteractiveUpload extends FormElement {
     $form_state->setRebuild();
   }
 
+  /**
+   * Submit function when the Remove button is clicked.
+   *
+   * @param array $form
+   *   The complete form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   */
   public static function remove(array &$form, FormStateInterface $form_state) {
     $self = static::getSelf($form, $form_state);
 
-    $file = File::load($self['fid']['#value']);
-    $file->delete();
+    Upload::delete($self['fid']);
 
     $form_state->setValueForElement($self, NULL);
     NestedArray::setValue($form_state->getUserInput(), $self['#parents'], NULL);
-
-    $uri = $file->getFileUri();
-    if (file_exists($uri)) {
-      \Drupal::service('file_system')->unlink($uri);
-    }
 
     $form_state->setRebuild();
   }

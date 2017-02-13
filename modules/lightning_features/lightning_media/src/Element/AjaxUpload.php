@@ -20,6 +20,11 @@ class AjaxUpload extends InteractiveUpload {
     $element['#prefix'] = '<div id="' . $element['#ajax']['wrapper'] . '">';
     $element['#suffix'] = '</div>';
 
+    $element['status_messages'] = [
+      '#type' => 'status_messages',
+      '#weight' => -100,
+    ];
+
     return parent::process($element);
   }
 

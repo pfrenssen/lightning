@@ -47,6 +47,15 @@ abstract class EntityFormProxy extends WidgetBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    $configuration = parent::defaultConfiguration();
+    $configuration['form_mode'] = 'media_browser';
+    return $configuration;
+  }
+
+  /**
    * EmbedCode constructor.
    *
    * @param array $configuration
@@ -114,7 +123,7 @@ abstract class EntityFormProxy extends WidgetBase {
           '#entity_type' => $entity->getEntityTypeId(),
           '#bundle' => $entity->bundle(),
           '#default_value' => $entity,
-          '#form_mode' => 'media_browser',
+          '#form_mode' => $this->configuration['media_browser'],
           '#process' => [
             [InlineEntityForm::class, 'processEntityForm'],
             [$this, 'processEntityForm'],

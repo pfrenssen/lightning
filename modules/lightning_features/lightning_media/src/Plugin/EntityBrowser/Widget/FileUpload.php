@@ -3,14 +3,11 @@
 namespace Drupal\lightning_media\Plugin\EntityBrowser\Widget;
 
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\HtmlCommand;
-use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\FileInterface;
 use Drupal\lightning_media\Element\AjaxUpload;
 use Drupal\media_entity\MediaInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * An Entity Browser widget for creating media entities from uploaded files.
@@ -137,11 +134,11 @@ class FileUpload extends EntityFormProxy {
    */
   public function processInitialFileElement(array $element) {
     if ($element['#value']) {
-      $element['remove']['#ajax']['callback'] = [$this, 'onRemove'];
+      $element['remove']['#ajax']['callback'] = [$this, 'onAjax'];
       $element['remove']['#value'] = $this->t('Cancel');
     }
     else {
-      $element['upload']['#ajax']['callback'] = [$this, 'onUpload'];
+      $element['upload']['#ajax']['callback'] = [$this, 'onAjax'];
     }
     return $element;
   }
@@ -191,7 +188,7 @@ class FileUpload extends EntityFormProxy {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The AJAX response.
    */
-  public function onUpload(array &$form, FormStateInterface $form_state) {
+  public function onAjax(array &$form, FormStateInterface $form_state) {
     $element = AjaxUpload::getSelf($form, $form_state);
 
     $response = new AjaxResponse();
@@ -200,42 +197,10 @@ class FileUpload extends EntityFormProxy {
     $command = new ReplaceCommand($selector, $element);
     $response->addCommand($command);
 
-    $complete_form = $form_state->getCompleteForm();
-    $selector = '#' . $complete_form['widget']['ief_target']['#id'];
-    $content = $this->getEntityForm($complete_form, $form_state);
-
-    $command = new HtmlCommand($selector, $content);
+    $command = new ReplaceCommand('#ief-target', $this->getEntityForm($form, $form_state));
     $response->addCommand($command);
+
     return $response;
-  }
-
-  /**
-   * AJAX callback. Responds when the uploaded file is removed.
-   *
-   * @param array $form
-   *   The complete form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current HTTP request.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   The AJAX response.
-   */
-  public function onRemove(array &$form, FormStateInterface $form_state, Request $request) {
-    $element = AjaxUpload::getSelf($form, $form_state);
-
-    $response = new AjaxResponse();
-
-    $selector = '#' . $element['#ajax']['wrapper'];
-    $command = new ReplaceCommand($selector, $element);
-    $response->addCommand($command);
-
-    $complete_form = $form_state->getCompleteForm();
-    $selector = '#' . $complete_form['widget']['ief_target']['#id'];
-
-    $command = new InvokeCommand($selector, 'empty');
-    return $response->addCommand($command);
   }
 
   /**

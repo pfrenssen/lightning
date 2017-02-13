@@ -96,29 +96,30 @@ abstract class EntityFormProxy extends WidgetBase {
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
 
-    $form['entity']['#markup'] = NULL;
-
-    $form['ief_target'] = [
-      '#type' => 'container',
-      '#id' => 'ief-target',
-      '#weight' => 10,
+    $form['entity'] = [
+      '#markup' => NULL,
+      '#prefix' => '<div id="ief-target">',
+      '#suffix' => '</div>',
+      '#weight' => 100,
     ];
 
     $input = $this->getInputValue($form_state);
     if ($input) {
       $entity = $this->generateEntity($input);
       if ($entity) {
-        $form['entity'] = array(
+        unset($form['entity']['#markup']);
+
+        $form['entity'] += [
           '#type' => 'inline_entity_form',
           '#entity_type' => $entity->getEntityTypeId(),
           '#bundle' => $entity->bundle(),
           '#default_value' => $entity,
           '#form_mode' => 'media_browser',
-          '#process' => array(
+          '#process' => [
             [InlineEntityForm::class, 'processEntityForm'],
             [$this, 'processEntityForm'],
-          ),
-        );
+          ],
+        ];
         // Without this, IEF won't know where to hook into the widget.
         // Don't pass $original_form as the second argument to addCallback(),
         // because it's not just the entity browser part of the form, not the

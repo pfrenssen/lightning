@@ -30,7 +30,7 @@ class EmbedCode extends EntityFormProxy {
       ),
       '#ajax' => array(
         'event' => 'change',
-        'wrapper' => $form['ief_target']['#id'],
+        'wrapper' => 'ief-target',
         'method' => 'html',
         'callback' => [$this, 'getEntityForm'],
       ),

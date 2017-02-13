@@ -6,17 +6,10 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\entity_browser\WidgetValidationManager;
 use Drupal\file\FileInterface;
-use Drupal\lightning_media\BundleResolverInterface;
 use Drupal\lightning_media\Element\AjaxUpload;
-use Drupal\lightning_media\SourceFieldTrait;
 use Drupal\media_entity\MediaInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -30,51 +23,6 @@ use Symfony\Component\HttpFoundation\Request;
  * )
  */
 class FileUpload extends EntityFormProxy {
-
-  use SourceFieldTrait;
-
-  /**
-   * FileUpload constructor.
-   *
-   * @param array $configuration
-   *   Plugin configuration.
-   * @param string $plugin_id
-   *   The plugin ID.
-   * @param mixed $plugin_definition
-   *   The plugin definition.
-   * @param EventDispatcherInterface $event_dispatcher
-   *   The event dispatcher.
-   * @param EntityManagerInterface $entity_manager
-   *   The entity manager service.
-   * @param WidgetValidationManager $widget_validation_manager
-   *   The widget validation manager.
-   * @param BundleResolverInterface $bundle_resolver
-   *   The media bundle resolver.
-   * @param AccountInterface $current_user
-   *   The currently logged in user.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityManagerInterface $entity_manager, WidgetValidationManager $widget_validation_manager, BundleResolverInterface $bundle_resolver, AccountInterface $current_user) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_manager, $widget_validation_manager, $bundle_resolver, $current_user);
-    $this->fieldStorage = $entity_manager->getStorage('field_config');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $bundle_resolver = $plugin_definition['bundle_resolver'];
-
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('event_dispatcher'),
-      $container->get('entity.manager'),
-      $container->get('plugin.manager.entity_browser.widget_validation'),
-      $container->get('plugin.manager.lightning_media.bundle_resolver')->createInstance($bundle_resolver),
-      $container->get('current_user')
-    );
-  }
 
   /**
    * {@inheritdoc}
@@ -137,9 +85,9 @@ class FileUpload extends EntityFormProxy {
     $entity = $this->generateEntity($file);
 
     if ($entity) {
-      $field = $this->getSourceField($entity)->getName();
+      $type_config = $entity->getType()->getConfiguration();
       /** @var \Drupal\file\Plugin\Field\FieldType\FileItem $item */
-      $item = $entity->get($field)->first();
+      $item = $entity->get($type_config['source_field'])->first();
       return file_validate($file, $item->getUploadValidators());
     }
     else {
@@ -174,8 +122,8 @@ class FileUpload extends EntityFormProxy {
    *   The source file.
    */
   protected function getFile(MediaInterface $entity) {
-    $field = $this->getSourceField($entity)->getName();
-    return $entity->get($field)->entity;
+    $type_config = $entity->getType()->getConfiguration();
+    return $entity->get($type_config['source_field'])->entity;
   }
 
   /**

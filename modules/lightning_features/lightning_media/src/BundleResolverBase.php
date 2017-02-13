@@ -16,11 +16,11 @@ abstract class BundleResolverBase extends PluginBase implements BundleResolverIn
   use SourceFieldTrait;
 
   /**
-   * The media bundle entity storage handler.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $bundleStorage;
+  protected $entityTypeManager;
 
   /**
    * BundleResolverBase constructor.
@@ -36,7 +36,7 @@ abstract class BundleResolverBase extends PluginBase implements BundleResolverIn
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->bundleStorage = $entity_type_manager->getStorage('media_bundle');
+    $this->entityTypeManager = $entity_type_manager;
     $this->fieldStorage = $entity_type_manager->getStorage('field_config');
   }
 
@@ -63,7 +63,11 @@ abstract class BundleResolverBase extends PluginBase implements BundleResolverIn
       return $field ? in_array($field->getType(), $plugin_definition['field_types']) : FALSE;
     };
 
-    return array_filter($this->bundleStorage->loadMultiple(), $filter);
+    $all_bundles = $this->entityTypeManager
+      ->getStorage('media_bundle')
+      ->loadMultiple();
+
+    return array_filter($all_bundles, $filter);
   }
 
 }

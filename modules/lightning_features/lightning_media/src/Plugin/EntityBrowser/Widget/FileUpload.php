@@ -24,16 +24,6 @@ class FileUpload extends EntityFormProxy {
   /**
    * {@inheritdoc}
    */
-  protected function getInputValue(FormStateInterface $form_state) {
-    $value = parent::getInputValue($form_state);
-    if ($value) {
-      return $this->entityTypeManager->getStorage('file')->load($value);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function prepareEntities(array $form, FormStateInterface $form_state) {
     $entities = parent::prepareEntities($form, $form_state);
 
@@ -193,8 +183,7 @@ class FileUpload extends EntityFormProxy {
 
     $response = new AjaxResponse();
 
-    $selector = '#' . $element['#ajax']['wrapper'];
-    $command = new ReplaceCommand($selector, $element);
+    $command = new ReplaceCommand('#' . $element['#ajax']['wrapper'], $element);
     $response->addCommand($command);
 
     $command = new ReplaceCommand('#ief-target', $this->getEntityForm($form, $form_state));

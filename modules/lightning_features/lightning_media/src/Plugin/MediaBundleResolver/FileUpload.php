@@ -32,7 +32,13 @@ class FileUpload extends BundleResolverBase {
         }
       }
     }
-    return FALSE;
+    elseif (is_numeric($input)) {
+      $file = $this->entityTypeManager->getStorage('file')->load($input);
+      return $this->getBundle($file);
+    }
+    else {
+      return FALSE;
+    }
   }
 
 }

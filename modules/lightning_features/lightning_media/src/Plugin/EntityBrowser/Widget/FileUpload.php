@@ -7,13 +7,11 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Utility\Token;
 use Drupal\entity_browser\WidgetValidationManager;
 use Drupal\file\FileInterface;
-use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\lightning_media\BundleResolverInterface;
 use Drupal\lightning_media\Element\AjaxUpload;
 use Drupal\lightning_media\SourceFieldTrait;
@@ -44,13 +42,6 @@ class FileUpload extends EntityFormProxy {
   protected $token;
 
   /**
-   * The file system service.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
-   */
-  protected $fileSystem;
-
-  /**
    * FileUpload constructor.
    *
    * @param array $configuration
@@ -71,13 +62,10 @@ class FileUpload extends EntityFormProxy {
    *   The currently logged in user.
    * @param Token $token
    *   The token replacement service.
-   * @param FileSystemInterface $file_system
-   *   The file system service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityManagerInterface $entity_manager, WidgetValidationManager $widget_validation_manager, BundleResolverInterface $bundle_resolver, AccountInterface $current_user, Token $token, FileSystemInterface $file_system) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityManagerInterface $entity_manager, WidgetValidationManager $widget_validation_manager, BundleResolverInterface $bundle_resolver, AccountInterface $current_user, Token $token) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_manager, $widget_validation_manager, $bundle_resolver, $current_user);
     $this->token = $token;
-    $this->fileSystem = $file_system;
     $this->fieldStorage = $entity_manager->getStorage('field_config');
   }
 
@@ -96,8 +84,7 @@ class FileUpload extends EntityFormProxy {
       $container->get('plugin.manager.entity_browser.widget_validation'),
       $container->get('plugin.manager.lightning_media.bundle_resolver')->createInstance($bundle_resolver),
       $container->get('current_user'),
-      $container->get('token'),
-      $container->get('file_system')
+      $container->get('token')
     );
   }
 
@@ -165,18 +152,7 @@ class FileUpload extends EntityFormProxy {
       $field = $this->getSourceField($entity)->getName();
       /** @var \Drupal\file\Plugin\Field\FieldType\FileItem $item */
       $item = $entity->get($field)->first();
-
-      $validators = $item->getUploadValidators();
-      if ($item instanceof ImageItem) {
-        $settings = $item->getFieldDefinition()->getSettings();
-        if ($settings['max_resolution'] || $settings['min_resolution']) {
-          $validators['file_validate_image_resolution'] = [
-            $settings['max_resolution'],
-            $settings['min_resolution'],
-          ];
-        }
-      }
-      return file_validate($file, $validators);
+      return file_validate($file, $item->getUploadValidators());
     }
     else {
       return [];
@@ -239,26 +215,6 @@ class FileUpload extends EntityFormProxy {
     $uri .= $this->getFile($entity)->getFilename();
 
     return $uri;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function generateEntity($input) {
-    $entity = parent::generateEntity($input);
-
-    $destination = $this->getPermanentUri($entity);
-    $dir = $this->fileSystem->dirname($destination);
-    $ready = file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
-    if ($ready) {
-      $file = file_move($this->getFile($entity), $destination);
-
-      if ($file) {
-        $file->setTemporary();
-        $file->save();
-        return $entity->set($this->getSourceField($entity)->getName(), $file);
-      }
-    }
   }
 
   /**
@@ -371,23 +327,6 @@ class FileUpload extends EntityFormProxy {
 
     $command = new InvokeCommand($selector, 'empty');
     return $response->addCommand($command);
-  }
-
-  /**
-   * Returns a list of acceptable file extensions for the file upload field.
-   *
-   * @return array
-   *   The list of acceptable file extensions.
-   */
-  protected function getAllowedFileUploadExtensions() {
-    $extensions = [];
-    $possible_bundles = $this->bundleResolver->getPossibleBundles();
-    foreach ($possible_bundles as $bundle) {
-      $field = $this->getSourceFieldForBundle($bundle);
-      $extensions = array_merge($extensions, preg_split('/,?\s+/', $field->getSetting('file_extensions')));
-    }
-
-    return implode(' ', array_unique($extensions));
   }
 
   /**

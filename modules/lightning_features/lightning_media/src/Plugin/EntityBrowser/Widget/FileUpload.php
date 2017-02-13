@@ -27,8 +27,13 @@ class FileUpload extends EntityFormProxy {
   protected function prepareEntities(array $form, FormStateInterface $form_state) {
     $entities = parent::prepareEntities($form, $form_state);
 
+    $get_file = function (MediaInterface $entity) {
+      $type_config = $entity->getType()->getConfiguration();
+      return $entity->get($type_config['source_field'])->entity;
+    };
+
     if ($this->configuration['return_file']) {
-      return array_map([$this, 'getFile'], $entities);
+      return array_map($get_file, $entities);
     }
     else {
       return $entities;
@@ -89,7 +94,21 @@ class FileUpload extends EntityFormProxy {
     /** @var \Drupal\media_entity\MediaInterface $entity */
     $entity = $element['entity']['#entity'];
 
-    $file = $this->getFile($entity);
+    $type_config = $entity->getType()->getConfiguration();
+    /** @var \Drupal\file\Plugin\Field\FieldType\FileItem $item */
+    $item = $entity->get($type_config['source_field'])->first();
+    /** @var FileInterface $file */
+    $file = $item->entity;
+
+    // Prepare the file's permanent home.
+    $dir = $item->getUploadLocation();
+    file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+
+    $destination = $dir . '/' . $file->getFilename();
+    if ($file->getFileUri() != $destination) {
+      $file = file_move($file, $destination);
+      $entity->set($type_config['source_field'], $file)->save();
+    }
     $file->setPermanent();
     $file->save();
 
@@ -97,20 +116,6 @@ class FileUpload extends EntityFormProxy {
       $this->configuration['return_file'] ? $file : $entity,
     ];
     $this->selectEntities($selection, $form_state);
-  }
-
-  /**
-   * Returns the source file of a media entity.
-   *
-   * @param \Drupal\media_entity\MediaInterface $entity
-   *   The media entity.
-   *
-   * @return \Drupal\file\FileInterface
-   *   The source file.
-   */
-  protected function getFile(MediaInterface $entity) {
-    $type_config = $entity->getType()->getConfiguration();
-    return $entity->get($type_config['source_field'])->entity;
   }
 
   /**

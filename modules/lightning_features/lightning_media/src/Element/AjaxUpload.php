@@ -38,14 +38,6 @@ class AjaxUpload extends InteractiveUpload {
     // Hide the upload button. It will be triggered by the auto-upload JS.
     $element['upload']['#attributes']['class'][] = 'js-hide';
 
-    // If any status messages are generated during an AJAX request, be sure
-    // to include them in the response.
-    $element['status_messages'] = [
-      '#type' => 'status_messages',
-      '#weight' => -100,
-      '#access' => $form_state->isRebuilding(),
-    ];
-
     // As far as AJAX is concerned, the Upload and Remove buttons do the same
     // thing (return their parent element). The differences lie in their
     // respective submit functions.

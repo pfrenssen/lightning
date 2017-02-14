@@ -30,6 +30,18 @@ Feature: Media asset browsers for CKEditor and image fields
       | error messages          |
       | You must upload a file. |
 
+  Scenario: Media browser upload widget validates file size
+    Given I am logged in as a user with the media_manager role
+    And "media.image.image" has a maximum upload size of "5 KB"
+    When I visit "/entity-browser/iframe/media_browser"
+    And I click "Upload"
+    And I attach the file "test.jpg" to "input_file"
+    And I wait for AJAX to finish
+    # This is a weak-sauce assertion but I can't tell exactly what the error
+    # message will say.
+    Then I should see a ".messages [role='alert']" element
+    And I should see an "input.form-file.error" element
+
   @test_module
   Scenario: Creating a YouTube video from within the media browser
     Given I am logged in as a user with the media_manager role

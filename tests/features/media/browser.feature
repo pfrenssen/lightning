@@ -21,6 +21,15 @@ Feature: Media asset browsers for CKEditor and image fields
     And I visit "/admin/content/media"
     Then I should see "A test file"
 
+  Scenario: Media browser upload widget should require a file
+    Given I am logged in as a user with the media_manager role
+    When I visit "/entity-browser/iframe/media_browser"
+    And I click "Upload"
+    And I press "Place"
+    Then I should see the following error message:
+      | error messages          |
+      | You must upload a file. |
+
   @test_module
   Scenario: Creating a YouTube video from within the media browser
     Given I am logged in as a user with the media_manager role
@@ -60,6 +69,15 @@ Feature: Media asset browsers for CKEditor and image fields
     And I press "Place"
     And I visit "/admin/content/media"
     Then I should see "Drupal Does LSD"
+
+  Scenario: Media browser embed code widget should require input
+    Given I am logged in as a user with the media_manager role
+    When I visit "/entity-browser/iframe/media_browser"
+    And I click "Create embed"
+    And I press "Place"
+    Then I should see the following error message:
+      | error messages                      |
+      | You must enter a URL or embed code. |
 
   @test_module
   Scenario: Uploading an image through the image browser

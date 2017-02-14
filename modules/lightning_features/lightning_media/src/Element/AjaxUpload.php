@@ -18,19 +18,39 @@ class AjaxUpload extends InteractiveUpload {
   public static function process(array $element, FormStateInterface $form_state) {
     $element = parent::process($element, $form_state);
 
-    $id = implode('-', $element['#parents']);
-    $element['#ajax']['wrapper'] = Html::cleanCssIdentifier($id);
-    $element['#prefix'] = '<div id="' . $element['#ajax']['wrapper'] . '">';
+    // Generate a CSS ID for the wrapping DIV.
+    $wrapper_id = implode('-', $element['#parents']);
+    $wrapper_id = Html::cleanCssIdentifier($wrapper_id);
+
+    // The element being processed is just a wrapper, and does not accept input
+    // or support AJAX directly. Still, store the wrapping DIV ID in a spot
+    // where other elements can access it if they need to refer to it.
+    $element['#ajax']['wrapper'] = $wrapper_id;
+
+    // Bring in the File module's slick auto-uploading stuff.
+    $element['#attached']['library'][] = 'file/drupal.file';
+
+    // The js-form-managed-file class is needed for the File module's
+    // auto-upload JavaScript to target this element.
+    $element['#prefix'] = '<div class="js-form-managed-file" id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
 
+    // Hide the upload button. It will be triggered by the auto-upload JS.
+    $element['upload']['#attributes']['class'][] = 'js-hide';
+
+    // If any status messages are generated during an AJAX request, be sure
+    // to include them in the response.
     $element['status_messages'] = [
       '#type' => 'status_messages',
       '#weight' => -100,
     ];
 
+    // As far as AJAX is concerned, the Upload and Remove buttons do the same
+    // thing (return their parent element). The differences lie in their
+    // respective submit functions.
     $element['upload']['#ajax'] = $element['remove']['#ajax'] = [
-      'callback' => [static::class, 'getSelf'],
-      'wrapper' => $element['#ajax']['wrapper'],
+      'callback' => [static::class, 'el'],
+      'wrapper' => $wrapper_id,
     ];
 
     return $element;

@@ -55,7 +55,7 @@ abstract class EntityFormProxy extends WidgetBase {
   }
 
   /**
-   * EmbedCode constructor.
+   * EntityFormProxy constructor.
    *
    * @param array $configuration
    *   Plugin configuration.
@@ -172,14 +172,14 @@ abstract class EntityFormProxy extends WidgetBase {
   }
 
   /**
-   * Generates a media entity from an embed code.
+   * Generates a media entity from an input value.
    *
-   * @param string $input
+   * @param mixed $input
    *   The input value from which to generate the entity.
    *
    * @return \Drupal\media_entity\MediaInterface|null
    *   A new, unsaved media entity, or null if the input value could not be
-   *   handled by any existing media bundles.
+   *   matched to any existing media bundles.
    */
   protected function generateEntity($input) {
     $bundle = $this->bundleResolver->getBundle($input);

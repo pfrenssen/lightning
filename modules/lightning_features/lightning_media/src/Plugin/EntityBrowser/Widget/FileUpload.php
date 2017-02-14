@@ -57,7 +57,6 @@ class FileUpload extends EntityFormProxy {
       '#type' => 'ajax_upload',
       '#title' => $this->t('File'),
       '#process' => [
-        [AjaxUpload::class, 'process'],
         [$this, 'processUploadElement'],
       ],
       '#upload_validators' => [
@@ -134,7 +133,9 @@ class FileUpload extends EntityFormProxy {
    * @return array
    *   The processed upload element.
    */
-  public function processUploadElement(array $element) {
+  public function processUploadElement(array $element, FormStateInterface $form_state) {
+    $element = AjaxUpload::process($element, $form_state);
+
     $element['upload']['#ajax']['callback'] =
     $element['remove']['#ajax']['callback'] = [$this, 'onAjax'];
 
@@ -155,11 +156,11 @@ class FileUpload extends EntityFormProxy {
    *   The AJAX response.
    */
   public function onAjax(array &$form, FormStateInterface $form_state) {
-    $element = AjaxUpload::getSelf($form, $form_state);
+    $el = AjaxUpload::el($form, $form_state);
 
     $response = new AjaxResponse();
 
-    $command = new ReplaceCommand('#' . $element['#ajax']['wrapper'], $element);
+    $command = new ReplaceCommand('#' . $el['#ajax']['wrapper'], $el);
     $response->addCommand($command);
 
     $command = new ReplaceCommand('#ief-target', $form['widget']['entity']);

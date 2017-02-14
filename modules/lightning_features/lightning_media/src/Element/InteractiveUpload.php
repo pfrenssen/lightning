@@ -98,13 +98,13 @@ class InteractiveUpload extends FormElement {
    * @return array
    *   The root element that contains the triggering element.
    */
-  public static function getSelf(array &$form, FormStateInterface $form_state) {
+  public static function el(array &$form, FormStateInterface $form_state) {
     $trigger = $form_state->getTriggeringElement();
     return NestedArray::getValue($form, array_slice($trigger['#array_parents'], 0, -1));
   }
 
   /**
-   * Submit function when the Upload button is clicked.
+   * Handles form submission when the Upload button is clicked.
    *
    * @param array $form
    *   The complete form.
@@ -112,7 +112,7 @@ class InteractiveUpload extends FormElement {
    *   The current form state.
    */
   public static function upload(array &$form, FormStateInterface $form_state) {
-    $el = static::getSelf($form, $form_state);
+    $el = static::el($form, $form_state);
 
     $form_state->setValueForElement($el['fid'], $el['file']['#value']);
     NestedArray::setValue($form_state->getUserInput(), $el['fid']['#parents'], $el['file']['#value']);
@@ -121,7 +121,7 @@ class InteractiveUpload extends FormElement {
   }
 
   /**
-   * Submit function when the Remove button is clicked.
+   * Handles form submission when the Remove button is clicked.
    *
    * @param array $form
    *   The complete form.
@@ -129,7 +129,7 @@ class InteractiveUpload extends FormElement {
    *   The current form state.
    */
   public static function remove(array &$form, FormStateInterface $form_state) {
-    $el = static::getSelf($form, $form_state);
+    $el = static::el($form, $form_state);
 
     Upload::delete($el['fid']);
 

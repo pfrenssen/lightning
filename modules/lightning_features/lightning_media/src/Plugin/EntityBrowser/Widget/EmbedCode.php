@@ -44,8 +44,10 @@ class EmbedCode extends EntityFormProxy {
    */
   public function validate(array &$form, FormStateInterface $form_state) {
     $input = trim($this->getInputValue($form_state));
-
-    if (empty($input)) {
+    if ($input) {
+      parent::validate($form, $form_state);
+    }
+    else {
       $form_state->setError($form['widget'], $this->t('You must enter a URL or embed code.'));
     }
   }

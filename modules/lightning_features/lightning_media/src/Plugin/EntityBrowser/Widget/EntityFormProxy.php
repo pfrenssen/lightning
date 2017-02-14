@@ -131,6 +131,17 @@ abstract class EntityFormProxy extends WidgetBase {
   /**
    * {@inheritdoc}
    */
+  public function validate(array &$form, FormStateInterface $form_state) {
+    $input = $this->getInputValue($form_state);
+    $bundle = $this->bundleResolver->getBundle($input);
+    if (empty($bundle)) {
+      $form_state->setError($form['widget'], $this->t('No media types can be matched to this input.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submit(array &$element, array &$form, FormStateInterface $form_state) {
     // IEF will take care of creating the entity upon submission. All we need to
     // do is send it upstream to Entity Browser.

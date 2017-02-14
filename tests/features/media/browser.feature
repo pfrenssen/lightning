@@ -42,6 +42,18 @@ Feature: Media asset browsers for CKEditor and image fields
     Then I should see a ".messages [role='alert']" element
     And I should see an "input.form-file.error" element
 
+  Scenario: Media browser upload widget should ensure that input can be matched to a media bundle
+    Given I am logged in as a user with the media_manager role
+    And "media.document.field_document" accepts foo files
+    When I visit "/entity-browser/iframe/media_browser"
+    And I click "Upload"
+    And I attach the file "test.pdf" to "input_file"
+    And I wait for AJAX to finish
+    And I press "Place"
+    Then I should see the following error message:
+      | error messages                               |
+      | No media types can be matched to this input. |
+
   @test_module
   Scenario: Creating a YouTube video from within the media browser
     Given I am logged in as a user with the media_manager role
@@ -90,6 +102,17 @@ Feature: Media asset browsers for CKEditor and image fields
     Then I should see the following error message:
       | error messages                      |
       | You must enter a URL or embed code. |
+
+  Scenario: Media browser embed code widget should ensure that input can be matched to a media bundle
+    Given I am logged in as a user with the media_manager role
+    When I visit "/entity-browser/iframe/media_browser"
+    And I click "Create embed"
+    And I enter "The quick brown fox jumps gets eaten by hungry lions." for "input"
+    And I wait for AJAX to finish
+    And I press "Place"
+    Then I should see the following error message:
+      | error messages                               |
+      | No media types can be matched to this input. |
 
   @test_module
   Scenario: Uploading an image through the image browser

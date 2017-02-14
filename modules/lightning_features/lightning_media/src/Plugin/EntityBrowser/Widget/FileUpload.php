@@ -2,7 +2,6 @@
 
 namespace Drupal\lightning_media\Plugin\EntityBrowser\Widget;
 
-use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\FileInterface;
@@ -60,6 +59,8 @@ class FileUpload extends EntityFormProxy {
         [$this, 'processUploadElement'],
       ],
       '#upload_validators' => [
+        // This must be a function because file_validate() is brain dead and
+        // still thinks function_exists() is a good way to verify callability.
         'lightning_media_validate_upload' => [
           $this->getPluginId(),
           $this->getConfiguration(),
@@ -96,6 +97,16 @@ class FileUpload extends EntityFormProxy {
   /**
    * {@inheritdoc}
    */
+  public function validate(array &$form, FormStateInterface $form_state) {
+    $input = $this->getInputValue($form_state);
+    if (empty($input)) {
+      $form_state->setError($form['widget'], $this->t('You must upload a file.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submit(array &$element, array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\media_entity\MediaInterface $entity */
     $entity = $element['entity']['#entity'];
@@ -111,7 +122,7 @@ class FileUpload extends EntityFormProxy {
     file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
 
     $destination = $dir . '/' . $file->getFilename();
-    if ($file->getFileUri() != $destination) {
+    if (!file_exists($destination)) {
       $file = file_move($file, $destination);
       $entity->set($type_config['source_field'], $file)->save();
     }
@@ -137,7 +148,7 @@ class FileUpload extends EntityFormProxy {
     $element = AjaxUpload::process($element, $form_state);
 
     $element['upload']['#ajax']['callback'] =
-    $element['remove']['#ajax']['callback'] = [$this, 'onAjax'];
+    $element['remove']['#ajax']['callback'] = [static::class, 'ajax'];
 
     $element['remove']['#value'] = $this->t('Cancel');
 
@@ -155,18 +166,12 @@ class FileUpload extends EntityFormProxy {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The AJAX response.
    */
-  public function onAjax(array &$form, FormStateInterface $form_state) {
+  public static function ajax(array &$form, FormStateInterface $form_state) {
     $el = AjaxUpload::el($form, $form_state);
 
-    $response = new AjaxResponse();
-
     $command = new ReplaceCommand('#' . $el['#ajax']['wrapper'], $el);
-    $response->addCommand($command);
 
-    $command = new ReplaceCommand('#ief-target', $form['widget']['entity']);
-    $response->addCommand($command);
-
-    return $response;
+    return parent::ajax($form, $form_state)->addCommand($command);
   }
 
   /**

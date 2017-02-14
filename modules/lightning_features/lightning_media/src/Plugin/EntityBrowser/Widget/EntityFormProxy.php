@@ -2,6 +2,8 @@
 
 namespace Drupal\lightning_media\Plugin\EntityBrowser\Widget;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -30,29 +32,6 @@ abstract class EntityFormProxy extends WidgetBase {
    * @var AccountInterface
    */
   protected $currentUser;
-
-  /**
-   * Returns the current input value, if any.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
-   *
-   * @return mixed
-   *   The input value, ready for further processing. Nothing will be done with
-   *   the value if it's empty.
-   */
-  protected function getInputValue(FormStateInterface $form_state) {
-    return $form_state->getValue('input');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function defaultConfiguration() {
-    $configuration = parent::defaultConfiguration();
-    $configuration['form_mode'] = 'media_browser';
-    return $configuration;
-  }
 
   /**
    * EntityFormProxy constructor.
@@ -106,7 +85,7 @@ abstract class EntityFormProxy extends WidgetBase {
 
     $form['entity'] = [
       '#markup' => NULL,
-      '#prefix' => '<div id="ief-target">',
+      '#prefix' => '<div id="entity">',
       '#suffix' => '</div>',
       '#weight' => 100,
     ];
@@ -152,23 +131,28 @@ abstract class EntityFormProxy extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function validate(array &$form, FormStateInterface $form_state) {
-    parent::validate($form, $form_state);
-
-    $input = $this->getInputValue($form_state);
-    if (empty($input)) {
-      $form_state->setError($form['widget'], 'No input provided!');
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function submit(array &$element, array &$form, FormStateInterface $form_state) {
     // IEF will take care of creating the entity upon submission. All we need to
     // do is send it upstream to Entity Browser.
     $entity = $form['widget']['entity']['#entity'];
     $this->selectEntities([$entity], $form_state);
+  }
+
+  /**
+   * AJAX callback. Returns the inline entity form.
+   *
+   * @param array $form
+   *   The complete form.
+   * @param FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @return AjaxResponse
+   *   The AJAX response.
+   */
+  public static function ajax(array &$form, FormStateInterface $form_state) {
+    $command = new ReplaceCommand('#entity', $form['widget']['entity']);
+
+    return (new AjaxResponse)->addCommand($command);
   }
 
   /**
@@ -196,6 +180,29 @@ abstract class EntityFormProxy extends WidgetBase {
 
       return $entity;
     }
+  }
+
+  /**
+   * Returns the current input value, if any.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @return mixed
+   *   The input value, ready for further processing. Nothing will be done with
+   *   the value if it's empty.
+   */
+  protected function getInputValue(FormStateInterface $form_state) {
+    return $form_state->getValue('input');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    $configuration = parent::defaultConfiguration();
+    $configuration['form_mode'] = 'media_browser';
+    return $configuration;
   }
 
 }

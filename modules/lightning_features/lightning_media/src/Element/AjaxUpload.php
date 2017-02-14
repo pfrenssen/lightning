@@ -3,6 +3,7 @@
 namespace Drupal\lightning_media\Element;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * An interactive, AJAX-ey file upload form element.
@@ -14,7 +15,9 @@ class AjaxUpload extends InteractiveUpload {
   /**
    * {@inheritdoc}
    */
-  public static function process(array $element) {
+  public static function process(array $element, FormStateInterface $form_state) {
+    $element = parent::process($element, $form_state);
+
     $id = implode('-', $element['#parents']);
     $element['#ajax']['wrapper'] = Html::cleanCssIdentifier($id);
     $element['#prefix'] = '<div id="' . $element['#ajax']['wrapper'] . '">';
@@ -25,32 +28,11 @@ class AjaxUpload extends InteractiveUpload {
       '#weight' => -100,
     ];
 
-    return parent::process($element);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static function processFile(array $element) {
-    $element = parent::processFile($element);
-
-    $element['remove']['#ajax'] = [
-      'callback' => static::class . '::getSelf',
+    $element['upload']['#ajax'] = $element['remove']['#ajax'] = [
+      'callback' => [static::class, 'getSelf'],
       'wrapper' => $element['#ajax']['wrapper'],
     ];
-    return $element;
-  }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected static function processEmpty(array $element) {
-    $element = parent::processEmpty($element);
-
-    $element['upload']['#ajax'] = [
-      'callback' => static::class . '::getSelf',
-      'wrapper' => $element['#ajax']['wrapper'],
-    ];
     return $element;
   }
 

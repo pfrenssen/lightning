@@ -24,6 +24,13 @@ class FileUpload extends EntityFormProxy {
   /**
    * {@inheritdoc}
    */
+  protected function getInputValue(FormStateInterface $form_state) {
+    return $form_state->getValue(['input', 'fid']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function prepareEntities(array $form, FormStateInterface $form_state) {
     $entities = parent::prepareEntities($form, $form_state);
 
@@ -51,7 +58,7 @@ class FileUpload extends EntityFormProxy {
       '#title' => $this->t('File'),
       '#process' => [
         [AjaxUpload::class, 'process'],
-        [$this, 'processInitialFileElement'],
+        [$this, 'processUploadElement'],
       ],
       '#upload_validators' => [
         'lightning_media_validate_upload' => [
@@ -119,55 +126,19 @@ class FileUpload extends EntityFormProxy {
   }
 
   /**
-   * Processes the file element that is NOT part of the entity form.
+   * Processes the upload element.
    *
    * @param array $element
-   *   The file element.
+   *   The upload element.
    *
    * @return array
-   *   The processed file element.
+   *   The processed upload element.
    */
-  public function processInitialFileElement(array $element) {
-    if ($element['#value']) {
-      $element['remove']['#ajax']['callback'] = [$this, 'onAjax'];
-      $element['remove']['#value'] = $this->t('Cancel');
-    }
-    else {
-      $element['upload']['#ajax']['callback'] = [$this, 'onAjax'];
-    }
-    return $element;
-  }
+  public function processUploadElement(array $element) {
+    $element['upload']['#ajax']['callback'] =
+    $element['remove']['#ajax']['callback'] = [$this, 'onAjax'];
 
-  /**
-   * {@inheritdoc}
-   */
-  public function processEntityForm(array $entity_form) {
-    $type_config = $entity_form['#entity']->getType()->getConfiguration();
-    $field = $type_config['source_field'];
-
-    if (isset($entity_form[$field])) {
-      $entity_form[$field]['widget'][0]['#process'][] = [$this, 'processEntityFormFileElement'];
-    }
-
-    return parent::processEntityForm($entity_form);
-  }
-
-  /**
-   * Processes the file element that IS part of the entity form.
-   *
-   * @param array $element
-   *   The file element.
-   *
-   * @return array
-   *   The processed file element.
-   */
-  public function processEntityFormFileElement(array $element) {
-    $element['remove_button']['#access'] = FALSE;
-
-    if ($element['#default_value']) {
-      $key = 'file_' . $element['#default_value']['target_id'];
-      $element[$key]['#access'] = FALSE;
-    }
+    $element['remove']['#value'] = $this->t('Cancel');
 
     return $element;
   }
@@ -191,7 +162,7 @@ class FileUpload extends EntityFormProxy {
     $command = new ReplaceCommand('#' . $element['#ajax']['wrapper'], $element);
     $response->addCommand($command);
 
-    $command = new ReplaceCommand('#ief-target', $this->getEntityForm($form, $form_state));
+    $command = new ReplaceCommand('#ief-target', $form['widget']['entity']);
     $response->addCommand($command);
 
     return $response;

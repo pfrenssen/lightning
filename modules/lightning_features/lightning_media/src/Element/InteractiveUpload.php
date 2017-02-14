@@ -36,73 +36,54 @@ class InteractiveUpload extends FormElement {
    *
    * @param array $element
    *   The unprocessed element.
+   * @param FormStateInterface $form_state
+   *   The current form state.
    *
    * @return array
    *   The processed element.
    */
-  public static function process(array $element) {
-    return $element['#value']
-      ? static::processFile($element)
-      : static::processEmpty($element);
-  }
-
-  /**
-   * Processes the element when there is a default value.
-   *
-   * @param array $element
-   *   The unprocessed element.
-   *
-   * @return array
-   *   The processed element.
-   */
-  protected static function processFile(array $element) {
-    $element['file'] = [
-      '#theme' => 'file_link',
-      '#file' => File::load($element['#value']),
-    ];
+  public static function process(array $element, FormStateInterface $form_state) {
     $element['fid'] = [
       '#type' => 'hidden',
-      '#default_value' => $element['#value'],
     ];
-    $element['remove'] = [
+    $element['upload'] = $element['remove'] = [
       '#type' => 'submit',
-      '#value' => t('Remove'),
+      '#is_button' => TRUE,
       '#limit_validation_errors' => [
         $element['#parents'],
       ],
-      '#submit' => [
-        [static::class, 'remove'],
-      ],
+      '#weight' => 100,
     ];
-    return $element;
-  }
 
-  /**
-   * Processes the element when there is no default value.
-   *
-   * @param array $element
-   *   The unprocessed element.
-   *
-   * @return array
-   *   The processed element.
-   */
-  protected static function processEmpty(array $element) {
-    $element['file'] = [
-      '#type' => 'upload',
-      '#title' => $element['#title'],
-      '#upload_location' => $element['#upload_location'],
-      '#upload_validators' => $element['#upload_validators'],
-    ];
-    $element['upload'] = [
-      '#type' => 'submit',
-      '#value' => t('Upload'),
-      '#limit_validation_errors' => [
-        $element['#parents'],
-      ],
-      '#submit' => [
-        [static::class, 'upload'],
-      ],
-    ];
+    $element['upload']['#value'] = t('Upload');
+    $element['upload']['#submit'][] = [static::class, 'upload'];
+
+    $element['remove']['#value'] = t('Remove');
+    $element['remove']['#submit'][] = [static::class, 'remove'];
+
+    $key = array_merge($element['#parents'], ['fid']);
+    // Don't use $form_state->hasValue(), because it will return TRUE if the
+    // value exists and is falsy. Valid file IDs will always be truthy.
+    $fid = $form_state->getValue($key);
+
+    if ($fid) {
+      $element['fid']['#value'] = $fid;
+
+      $element['file'] = [
+        '#theme' => 'file_link',
+        '#file' => File::load($fid),
+      ];
+      $element['upload']['#access'] = FALSE;
+    }
+    else {
+      $element['file'] = [
+        '#type' => 'upload',
+        '#title' => $element['#title'],
+        '#upload_location' => $element['#upload_location'],
+        '#upload_validators' => $element['#upload_validators'],
+      ];
+      $element['remove']['#access'] = FALSE;
+    }
     return $element;
   }
 
@@ -131,10 +112,10 @@ class InteractiveUpload extends FormElement {
    *   The current form state.
    */
   public static function upload(array &$form, FormStateInterface $form_state) {
-    $self = static::getSelf($form, $form_state);
+    $el = static::getSelf($form, $form_state);
 
-    $form_state->setValueForElement($self, $self['file']['#value']);
-    NestedArray::setValue($form_state->getUserInput(), $self['#parents'], $self['file']['#value']);
+    $form_state->setValueForElement($el['fid'], $el['file']['#value']);
+    NestedArray::setValue($form_state->getUserInput(), $el['fid']['#parents'], $el['file']['#value']);
 
     $form_state->setRebuild();
   }
@@ -148,12 +129,12 @@ class InteractiveUpload extends FormElement {
    *   The current form state.
    */
   public static function remove(array &$form, FormStateInterface $form_state) {
-    $self = static::getSelf($form, $form_state);
+    $el = static::getSelf($form, $form_state);
 
-    Upload::delete($self['fid']);
+    Upload::delete($el['fid']);
 
-    $form_state->setValueForElement($self, NULL);
-    NestedArray::setValue($form_state->getUserInput(), $self['#parents'], NULL);
+    $form_state->setValueForElement($el['fid'], NULL);
+    NestedArray::setValue($form_state->getUserInput(), $el['fid']['#parents'], NULL);
 
     $form_state->setRebuild();
   }

@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\entity_browser\WidgetBase;
 use Drupal\entity_browser\WidgetValidationManager;
-use Drupal\inline_entity_form\Element\InlineEntityForm;
 use Drupal\inline_entity_form\ElementSubmit;
 use Drupal\lightning_media\BundleResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -123,11 +122,7 @@ abstract class EntityFormProxy extends WidgetBase {
           '#entity_type' => $entity->getEntityTypeId(),
           '#bundle' => $entity->bundle(),
           '#default_value' => $entity,
-          '#form_mode' => $this->configuration['media_browser'],
-          '#process' => [
-            [InlineEntityForm::class, 'processEntityForm'],
-            [$this, 'processEntityForm'],
-          ],
+          '#form_mode' => $this->configuration['form_mode'],
         ];
         // Without this, IEF won't know where to hook into the widget.
         // Don't pass $original_form as the second argument to addCallback(),
@@ -152,34 +147,6 @@ abstract class EntityFormProxy extends WidgetBase {
     else {
       return [];
     }
-  }
-
-  /**
-   * Performs additional processing on the inline entity form.
-   *
-   * @param array $entity_form
-   *   The processed inline entity form element.
-   *
-   * @return array
-   *   The processed element.
-   */
-  public function processEntityForm(array $entity_form) {
-    return $entity_form;
-  }
-
-  /**
-   * AJAX callback. Returns the inline entity form.
-   *
-   * @param array $form
-   *   The complete form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
-   *
-   * @return array
-   *   The renderable inline entity form.
-   */
-  public function getEntityForm(array &$form, FormStateInterface $form_state) {
-    return $form['widget']['entity'];
   }
 
   /**

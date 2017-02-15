@@ -48,9 +48,7 @@ Feature: Creating media assets from within the media browser using embed codes
     And I wait 1 second
     And I click "Create embed"
     And I press "Place"
-    Then I should see the following error message:
-      | error messages                      |
-      | You must enter a URL or embed code. |
+    Then I should see the error message "You must enter a URL or embed code."
 
   Scenario: Media browser embed code widget should ensure that input can be matched to a media bundle
     Given I am logged in as a user with the media_manager role
@@ -61,6 +59,4 @@ Feature: Creating media assets from within the media browser using embed codes
     And I enter "The quick brown fox gets eaten by hungry lions." for "input"
     And I wait for AJAX to finish
     And I press "Place"
-    Then I should see the following error message:
-      | error messages                               |
-      | No media types can be matched to this input. |
+    Then I should see the error message "No media types can be matched to this input."

@@ -4,7 +4,7 @@ namespace Drupal\lightning_media\Plugin\EntityBrowser\Widget;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\entity_browser\WidgetBase;
@@ -44,8 +44,8 @@ abstract class EntityFormProxy extends WidgetBase {
    *   The plugin definition.
    * @param EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
-   * @param EntityManagerInterface $entity_manager
-   *   The entity manager service.
+   * @param EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
    * @param WidgetValidationManager $widget_validation_manager
    *   The widget validation manager.
    * @param BundleResolverInterface $bundle_resolver
@@ -53,8 +53,8 @@ abstract class EntityFormProxy extends WidgetBase {
    * @param AccountInterface $current_user
    *   The currently logged in user.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityManagerInterface $entity_manager, WidgetValidationManager $widget_validation_manager, BundleResolverInterface $bundle_resolver, AccountInterface $current_user) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_manager, $widget_validation_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EventDispatcherInterface $event_dispatcher, EntityTypeManagerInterface $entity_type_manager, WidgetValidationManager $widget_validation_manager, BundleResolverInterface $bundle_resolver, AccountInterface $current_user) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $entity_type_manager, $widget_validation_manager);
     $this->bundleResolver = $bundle_resolver;
     $this->currentUser = $current_user;
   }
@@ -70,7 +70,7 @@ abstract class EntityFormProxy extends WidgetBase {
       $plugin_id,
       $plugin_definition,
       $container->get('event_dispatcher'),
-      $container->get('entity.manager'),
+      $container->get('entity_type.manager'),
       $container->get('plugin.manager.entity_browser.widget_validation'),
       $container->get('plugin.manager.lightning_media.bundle_resolver')->createInstance($bundle_resolver),
       $container->get('current_user')

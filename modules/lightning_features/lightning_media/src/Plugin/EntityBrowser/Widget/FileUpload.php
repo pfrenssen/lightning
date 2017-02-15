@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\FileInterface;
 use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\lightning_media\Element\AjaxUpload;
+use Drupal\lightning_media\SourceFieldTrait;
 use Drupal\media_entity\MediaInterface;
 
 /**
@@ -21,6 +22,8 @@ use Drupal\media_entity\MediaInterface;
  * )
  */
 class FileUpload extends EntityFormProxy {
+
+  use SourceFieldTrait;
 
   /**
    * {@inheritdoc}
@@ -61,6 +64,11 @@ class FileUpload extends EntityFormProxy {
         [$this, 'processUploadElement'],
       ],
       '#upload_validators' => [
+        // For security, only allow extensions that are accepted by existing
+        // media bundles.
+        'file_validate_extensions' => [
+          $this->getAcceptableExtensions(),
+        ],
         // This must be a function because file_validate() is brain dead and
         // still thinks function_exists() is a good way to verify callability.
         'lightning_media_validate_upload' => [
@@ -99,6 +107,8 @@ class FileUpload extends EntityFormProxy {
       'file_validate_name_length' => [],
     ];
     $validators = array_merge($validators, $item->getUploadValidators());
+    // If we got here, the extension is already validated (see ::getForm()).
+    unset($validators['file_validate_extensions']);
 
     // If this is an image field, add image validation. Against all sanity,
     // this is normally done by ImageWidget, not ImageItem, which is why we
@@ -116,6 +126,22 @@ class FileUpload extends EntityFormProxy {
       }
     }
     return file_validate($file, $validators);
+  }
+
+  /**
+   * Returns an aggregated list of acceptable file extensions.
+   *
+   * @return string
+   *   A space-separated list of file extensions accepted by the existing media
+   *   bundles.
+   */
+  protected function getAcceptableExtensions() {
+    $extensions = [];
+
+    foreach ($this->bundleResolver->getPossibleBundles() as $bundle) {
+      $extensions = array_merge($extensions, preg_split('/,?\s+/', $this->getSourceFieldForBundle($bundle)->getSetting('file_extensions')));
+    }
+    return implode(' ', array_unique($extensions));
   }
 
   /**

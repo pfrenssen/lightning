@@ -37,7 +37,6 @@ abstract class BundleResolverBase extends PluginBase implements BundleResolverIn
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
-    $this->fieldStorage = $entity_type_manager->getStorage('field_config');
   }
 
   /**

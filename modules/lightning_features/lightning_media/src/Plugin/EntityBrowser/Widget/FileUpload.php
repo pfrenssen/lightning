@@ -2,6 +2,8 @@
 
 namespace Drupal\lightning_media\Plugin\EntityBrowser\Widget;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\FileInterface;
@@ -143,6 +145,8 @@ class FileUpload extends EntityFormProxy {
    *
    * @param array $element
    *   The upload element.
+   * @param FormStateInterface $form_state
+   *   The current form state.
    *
    * @return array
    *   The processed upload element.
@@ -159,22 +163,35 @@ class FileUpload extends EntityFormProxy {
   }
 
   /**
-   * AJAX callback. Responds when a file has been uploaded.
+   * AJAX callback -- returns the rebuilt entity form.
    *
    * @param array $form
    *   The complete form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param FormStateInterface $form_state
    *   The current form state.
    *
-   * @return \Drupal\Core\Ajax\AjaxResponse
+   * @return AjaxResponse
    *   The AJAX response.
    */
   public static function ajax(array &$form, FormStateInterface $form_state) {
     $el = AjaxUpload::el($form, $form_state);
 
-    $command = new ReplaceCommand('#' . $el['#ajax']['wrapper'], $el);
+    $wrapper = '#' . $el['#ajax']['wrapper'];
 
-    return parent::ajax($form, $form_state)->addCommand($command);
+    return (new AjaxResponse)
+      // Replace the upload element with its rebuilt version.
+      ->addCommand(
+        new ReplaceCommand($wrapper, $el)
+      )
+      // Prepend the status messages so that a) any errors regarding the
+      // uploaded file will be displayed right away, and b) the message queue
+      // will be cleared so that the errors won't persist on a full page reload.
+      ->addCommand(
+        new PrependCommand($wrapper, ['#type' => 'status_messages'])
+      )
+      ->addCommand(
+        new ReplaceCommand('#entity', $form['widget']['entity'])
+      );
   }
 
   /**

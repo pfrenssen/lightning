@@ -110,7 +110,7 @@ class MediaLibrarySubContext extends DrupalSubContextBase {
    */
   protected function awaitEntityForm() {
     $this->minkContext->iWaitForAjaxToFinish();
-    $this->awaitExpression('document.getElementById("ief-target").textContent.length');
+    $this->awaitExpression('jQuery("#entity").children().length');
   }
 
   /**

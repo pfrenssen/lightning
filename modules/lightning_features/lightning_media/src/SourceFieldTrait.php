@@ -6,7 +6,7 @@ use Drupal\media_entity\MediaBundleInterface;
 use Drupal\media_entity\MediaInterface;
 
 /**
- * The definition of a media entity's source field's storage.
+ * Helper for bundle resolvers that deal with source fields.
  */
 trait SourceFieldTrait {
 

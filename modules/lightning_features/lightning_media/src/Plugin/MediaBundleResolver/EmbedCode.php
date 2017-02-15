@@ -75,20 +75,26 @@ class EmbedCode extends BundleResolverBase {
    * {@inheritdoc}
    */
   public function getBundle($input) {
-    $storage = $this->entityTypeManager->getStorage('media_bundle');
-
     if ($this->isVideo($input)) {
-      return $storage->load('video');
+      $type_plugin = 'video_embed_field';
     }
     elseif ($this->isTweet($input)) {
-      return $storage->load('tweet');
+      $type_plugin = 'twitter';
     }
-    elseif ($this->isTweet($input)) {
-      return $storage->load('instagram');
+    elseif ($this->isInstagram($input)) {
+      $type_plugin = 'instagram';
     }
-    else {
-      return FALSE;
+
+    $bundles = [];
+
+    if (isset($type_plugin)) {
+      // If we know which type plugin to look for, load all bundles that use it.
+      $bundles = $this->entityTypeManager->getStorage('media_bundle')
+        ->loadByProperties([
+          'type' => $type_plugin,
+        ]);
     }
+    return reset($bundles);
   }
 
   /**

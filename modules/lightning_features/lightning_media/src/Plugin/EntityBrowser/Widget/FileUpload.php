@@ -7,6 +7,7 @@ use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\FileInterface;
+use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\lightning_media\Element\AjaxUpload;
 use Drupal\media_entity\MediaInterface;
 
@@ -89,7 +90,31 @@ class FileUpload extends EntityFormProxy {
       $type_config = $entity->getType()->getConfiguration();
       /** @var \Drupal\file\Plugin\Field\FieldType\FileItem $item */
       $item = $entity->get($type_config['source_field'])->first();
-      return file_validate($file, $item->getUploadValidators());
+
+      $validators = [
+        // It's maybe a bit overzealous to run this validator, but hey...better
+        // safe than screwed over by script kiddies.
+        'file_validate_name_length' => [],
+      ];
+      $validators = array_merge($validators, $item->getUploadValidators());
+
+      // If this is an image field, add image validation. Against all sanity,
+      // this is normally done by ImageWidget, not ImageItem, which is why we
+      // need to facilitate this a bit.
+      if ($item instanceof ImageItem) {
+        // Validate that this is, indeed, a supported image.
+        $validators['file_validate_is_image'] = [];
+
+        $settings = $item->getFieldDefinition()->getSettings();
+        if ($settings['max_resolution'] || $settings['min_resolution']) {
+          $validators['file_validate_image_resolution'] = [
+            $settings['max_resolution'],
+            $settings['min_resolution'],
+          ];
+        }
+      }
+
+      return file_validate($file, $validators);
     }
     else {
       return [];

@@ -2,7 +2,6 @@
 
 namespace Drupal\lightning_media\Plugin\EntityBrowser\Widget;
 
-use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
@@ -86,39 +85,37 @@ class FileUpload extends EntityFormProxy {
   public function validateFile(FileInterface $file) {
     $entity = $this->generateEntity($file);
 
-    if ($entity) {
-      $type_config = $entity->getType()->getConfiguration();
-      /** @var \Drupal\file\Plugin\Field\FieldType\FileItem $item */
-      $item = $entity->get($type_config['source_field'])->first();
-
-      $validators = [
-        // It's maybe a bit overzealous to run this validator, but hey...better
-        // safe than screwed over by script kiddies.
-        'file_validate_name_length' => [],
-      ];
-      $validators = array_merge($validators, $item->getUploadValidators());
-
-      // If this is an image field, add image validation. Against all sanity,
-      // this is normally done by ImageWidget, not ImageItem, which is why we
-      // need to facilitate this a bit.
-      if ($item instanceof ImageItem) {
-        // Validate that this is, indeed, a supported image.
-        $validators['file_validate_is_image'] = [];
-
-        $settings = $item->getFieldDefinition()->getSettings();
-        if ($settings['max_resolution'] || $settings['min_resolution']) {
-          $validators['file_validate_image_resolution'] = [
-            $settings['max_resolution'],
-            $settings['min_resolution'],
-          ];
-        }
-      }
-
-      return file_validate($file, $validators);
-    }
-    else {
+    if (empty($entity)) {
       return [];
     }
+
+    $type_config = $entity->getType()->getConfiguration();
+    /** @var \Drupal\file\Plugin\Field\FieldType\FileItem $item */
+    $item = $entity->get($type_config['source_field'])->first();
+
+    $validators = [
+      // It's maybe a bit overzealous to run this validator, but hey...better
+      // safe than screwed over by script kiddies.
+      'file_validate_name_length' => [],
+    ];
+    $validators = array_merge($validators, $item->getUploadValidators());
+
+    // If this is an image field, add image validation. Against all sanity,
+    // this is normally done by ImageWidget, not ImageItem, which is why we
+    // need to facilitate this a bit.
+    if ($item instanceof ImageItem) {
+      // Validate that this is, indeed, a supported image.
+      $validators['file_validate_is_image'] = [];
+
+      $settings = $item->getFieldDefinition()->getSettings();
+      if ($settings['max_resolution'] || $settings['min_resolution']) {
+        $validators['file_validate_image_resolution'] = [
+          $settings['max_resolution'],
+          $settings['min_resolution'],
+        ];
+      }
+    }
+    return file_validate($file, $validators);
   }
 
   /**
@@ -188,22 +185,14 @@ class FileUpload extends EntityFormProxy {
   }
 
   /**
-   * AJAX callback -- returns the rebuilt entity form.
-   *
-   * @param array $form
-   *   The complete form.
-   * @param FormStateInterface $form_state
-   *   The current form state.
-   *
-   * @return AjaxResponse
-   *   The AJAX response.
+   * {@inheritdoc}
    */
   public static function ajax(array &$form, FormStateInterface $form_state) {
     $el = AjaxUpload::el($form, $form_state);
 
     $wrapper = '#' . $el['#ajax']['wrapper'];
 
-    return (new AjaxResponse)
+    return parent::ajax($form, $form_state)
       // Replace the upload element with its rebuilt version.
       ->addCommand(
         new ReplaceCommand($wrapper, $el)
@@ -213,9 +202,6 @@ class FileUpload extends EntityFormProxy {
       // will be cleared so that the errors won't persist on a full page reload.
       ->addCommand(
         new PrependCommand($wrapper, ['#type' => 'status_messages'])
-      )
-      ->addCommand(
-        new ReplaceCommand('#entity', $form['widget']['entity'])
       );
   }
 

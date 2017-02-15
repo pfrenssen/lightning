@@ -150,7 +150,7 @@ abstract class EntityFormProxy extends WidgetBase {
   }
 
   /**
-   * AJAX callback. Returns the inline entity form.
+   * AJAX callback. Returns the rebuilt inline entity form.
    *
    * @param array $form
    *   The complete form.
@@ -161,9 +161,10 @@ abstract class EntityFormProxy extends WidgetBase {
    *   The AJAX response.
    */
   public static function ajax(array &$form, FormStateInterface $form_state) {
-    $command = new ReplaceCommand('#entity', $form['widget']['entity']);
-
-    return (new AjaxResponse)->addCommand($command);
+    return (new AjaxResponse)
+      ->addCommand(
+        new ReplaceCommand('#entity', $form['widget']['entity'])
+      );
   }
 
   /**

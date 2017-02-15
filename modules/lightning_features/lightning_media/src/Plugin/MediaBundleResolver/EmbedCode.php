@@ -75,18 +75,19 @@ class EmbedCode extends BundleResolverBase {
    * {@inheritdoc}
    */
   public function getBundle($input) {
-    switch (TRUE) {
-      case $this->isVideo($input):
-        return $this->bundleStorage->load('video');
+    $storage = $this->entityTypeManager->getStorage('media_bundle');
 
-      case $this->isTweet($input):
-        return $this->bundleStorage->load('tweet');
-
-      case $this->isInstagram($input):
-        return $this->bundleStorage->load('instagram');
-
-      default:
-        return FALSE;
+    if ($this->isVideo($input)) {
+      return $storage->load('video');
+    }
+    elseif ($this->isTweet($input)) {
+      return $storage->load('tweet');
+    }
+    elseif ($this->isTweet($input)) {
+      return $storage->load('instagram');
+    }
+    else {
+      return FALSE;
     }
   }
 

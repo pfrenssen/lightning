@@ -52,9 +52,18 @@ Feature: Uploading media assets through the media browser
 
   @security
   Scenario: The upload widget rejects files with unrecognized extensions
-    Given I am logged in as a user with the media_manager role
+    Given I am logged in as a user with the media_creator role
     When I visit "/entity-browser/iframe/media_browser"
     And I click "Upload"
     And I attach the file "test.php" to "input_file"
     And I wait for AJAX to finish
     Then I should see the error message containing "Only files with the following extensions are allowed:"
+
+  @security
+  Scenario: Upload widget will not allow the user to create media of bundles to which they do not have access
+    Given I am logged in as a user with the "access media_browser entity browser pages" permission
+    When I visit "/entity-browser/iframe/media_browser"
+    And I click "Upload"
+    And I attach the file "test.php" to "input_file"
+    And I wait for AJAX to finish
+    Then the "#entity" element should be empty

@@ -4,6 +4,7 @@ namespace Drupal\lightning_media\Plugin\MediaBundleResolver;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\Plugin\DataType\StringData;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\lightning_media\BundleResolverBase;
@@ -38,15 +39,17 @@ class EmbedCode extends BundleResolverBase {
   /**
    * MediaBundleResolver constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param EntityTypeManagerInterface $entity_type_manager
    *   The entity manager.
-   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
+   * @param AccountInterface $current_user
+   *   The currently logged in user.
+   * @param TypedDataManagerInterface $typed_data_manager
    *   The typed data manager.
-   * @param \Drupal\video_embed_field\ProviderManagerInterface $video_providers
+   * @param ProviderManagerInterface $video_providers
    *   (optional) The video provider manager.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, TypedDataManagerInterface $typed_data_manager, ProviderManagerInterface $video_providers = NULL) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, AccountInterface $current_user, TypedDataManagerInterface $typed_data_manager, ProviderManagerInterface $video_providers = NULL) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $current_user);
     $this->typedData = $typed_data_manager;
     $this->videoProviders = $video_providers;
   }
@@ -60,6 +63,7 @@ class EmbedCode extends BundleResolverBase {
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager'),
+      $container->get('current_user'),
       $container->get('typed_data_manager'),
     );
     try {
@@ -94,6 +98,14 @@ class EmbedCode extends BundleResolverBase {
           'type' => $type_plugin,
         ]);
     }
+
+    $access_handler = $this->entityTypeManager->getAccessControlHandler('media');
+
+    // Filter out bundles which the current user cannot create.
+    $bundles = array_filter(array_keys($bundles), function ($bundle) use ($access_handler) {
+      return $access_handler->createAccess($bundle, $this->currentUser);
+    });
+
     return reset($bundles);
   }
 

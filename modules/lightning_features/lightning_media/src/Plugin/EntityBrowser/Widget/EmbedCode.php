@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "embed_code",
  *   label = @Translation("Embed Code"),
  *   description = @Translation("Allows creation of media entities from embed codes."),
- *   bundle_resolver = "embed_code"
+ *   bundle_resolver = "embed_code",
  * )
  */
 class EmbedCode extends EntityFormProxy {

@@ -83,11 +83,15 @@ abstract class EntityFormProxy extends WidgetBase {
   public function getForm(array &$original_form, FormStateInterface $form_state, array $additional_widget_parameters) {
     $form = parent::getForm($original_form, $form_state, $additional_widget_parameters);
 
+    if (isset($form['actions'])) {
+      $form['actions']['#weight'] = 100;
+    }
+
     $form['entity'] = [
       '#markup' => NULL,
       '#prefix' => '<div id="entity">',
       '#suffix' => '</div>',
-      '#weight' => 100,
+      '#weight' => 99,
     ];
 
     $input = $this->getInputValue($form_state);

@@ -44,6 +44,8 @@ Feature: Creating media assets from within the media browser using embed codes
   Scenario: Media browser embed code widget should require input
     Given I am logged in as a user with the media_manager role
     When I visit "/entity-browser/iframe/media_browser"
+    # Allow Entity Browser to redraw the widget selection buttons as tabs.
+    And I wait 1 second
     And I click "Create embed"
     And I press "Place"
     Then I should see the following error message:
@@ -53,6 +55,8 @@ Feature: Creating media assets from within the media browser using embed codes
   Scenario: Media browser embed code widget should ensure that input can be matched to a media bundle
     Given I am logged in as a user with the media_manager role
     When I visit "/entity-browser/iframe/media_browser"
+    # Allow Entity Browser to redraw the widget selection buttons as tabs.
+    And I wait 1 second
     And I click "Create embed"
     And I enter "The quick brown fox gets eaten by hungry lions." for "input"
     And I wait for AJAX to finish

@@ -54,7 +54,7 @@ Feature: Creating media assets from within the media browser using embed codes
     Given I am logged in as a user with the media_manager role
     When I visit "/entity-browser/iframe/media_browser"
     And I click "Create embed"
-    And I enter "The quick brown fox jumps gets eaten by hungry lions." for "input"
+    And I enter "The quick brown fox gets eaten by hungry lions." for "input"
     And I wait for AJAX to finish
     And I press "Place"
     Then I should see the following error message:

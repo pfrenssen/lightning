@@ -18,7 +18,6 @@ use Drupal\media_entity\MediaInterface;
  *   id = "file_upload",
  *   label = @Translation("File Upload"),
  *   description = @Translation("Allows creation of media entities from file uploads."),
- *   bundle_resolver = "file_upload",
  * )
  */
 class FileUpload extends EntityFormProxy {

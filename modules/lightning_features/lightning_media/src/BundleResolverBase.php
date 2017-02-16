@@ -11,10 +11,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for media bundle resolvers.
+ *
+ * @deprecated in Lightning 2.0.4 and will be removed in Lightning 3.x. Media
+ * type plugins should implement InputMatchInterface directly instead.
  */
-abstract class BundleResolverBase extends PluginBase implements BundleResolverInterface, ContainerFactoryPluginInterface {
-
-  use SourceFieldTrait;
+class BundleResolverBase extends PluginBase implements BundleResolverInterface, ContainerFactoryPluginInterface {
 
   /**
    * The entity type manager.
@@ -64,26 +65,42 @@ abstract class BundleResolverBase extends PluginBase implements BundleResolverIn
   }
 
   /**
-   * {@inheritdoc}
+   * Returns all available media bundles.
+   *
+   * @return MediaBundleInterface[]
+   *   All available media bundles for which the current user has create access.
    */
   public function getPossibleBundles() {
-    $plugin_definition = $this->getPluginDefinition();
     $access_handler = $this->entityTypeManager->getAccessControlHandler('media');
 
-    $filter = function (MediaBundleInterface $bundle) use ($plugin_definition, $access_handler) {
-      $field = $this->getSourceFieldForBundle($bundle);
-
-      return (
-        $field &&
-        in_array($field->getType(), $plugin_definition['field_types']) &&
-        $access_handler->createAccess($bundle->id(), $this->currentUser)
-      );
-    };
-
     return array_filter(
-      $this->entityTypeManager->getStorage('media_bundle')->loadMultiple(),
-      $filter
+      $this->entityTypeManager
+        ->getStorage('media_bundle')
+        ->loadMultiple(),
+
+      function (MediaBundleInterface $bundle) use ($access_handler) {
+        return $access_handler->createAccess($bundle->id(), $this->currentUser);
+      }
     );
+  }
+
+  /**
+   * Returns the first available media bundle that can handle an input value.
+   *
+   * @param mixed $input
+   *   The input value.
+   *
+   * @return MediaBundleInterface|false
+   *   A media bundle which can handle the input, or FALSE if there are none.
+   */
+  public function getBundle($input) {
+    foreach ($this->getPossibleBundles() as $bundle) {
+      $plugin = $bundle->getType();
+      if ($plugin instanceof InputMatchInterface && $plugin->appliesTo($input, $bundle)) {
+        return $bundle;
+      }
+    }
+    return FALSE;
   }
 
 }

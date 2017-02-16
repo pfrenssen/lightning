@@ -10,6 +10,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\entity_browser\WidgetBase;
 use Drupal\entity_browser\WidgetValidationManager;
 use Drupal\inline_entity_form\ElementSubmit;
+use Drupal\lightning_media\BundleResolverBase;
 use Drupal\lightning_media\BundleResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -63,8 +64,6 @@ abstract class EntityFormProxy extends WidgetBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $bundle_resolver = $plugin_definition['bundle_resolver'];
-
     return new static(
       $configuration,
       $plugin_id,
@@ -72,7 +71,7 @@ abstract class EntityFormProxy extends WidgetBase {
       $container->get('event_dispatcher'),
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.entity_browser.widget_validation'),
-      $container->get('plugin.manager.lightning_media.bundle_resolver')->createInstance($bundle_resolver),
+      BundleResolverBase::create($container, [], 'bundle_resolver', []),
       $container->get('current_user')
     );
   }

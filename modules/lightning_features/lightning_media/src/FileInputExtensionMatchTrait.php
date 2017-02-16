@@ -17,7 +17,7 @@ trait FileInputExtensionMatchTrait {
    *   The entity type manager.
    */
   private function entityTypeManager() {
-    return $this->entityTypeManager ?: \Drupal::entityTypeManager();
+    return @($this->entityTypeManager ?: \Drupal::entityTypeManager());
   }
 
   /**

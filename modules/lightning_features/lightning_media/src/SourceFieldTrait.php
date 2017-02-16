@@ -49,7 +49,7 @@ trait SourceFieldTrait {
    *   The entity type manager, duh.
    */
   private function entityTypeManager() {
-    return $this->entityTypeManager ?: \Drupal::entityTypeManager();
+    return @($this->entityTypeManager ?: \Drupal::entityTypeManager());
   }
 
 }

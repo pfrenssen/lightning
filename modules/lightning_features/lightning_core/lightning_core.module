@@ -34,7 +34,7 @@ use Drupal\user\RoleInterface;
  */
 function lightning_core_override_plugin_class(array &$definition, $replacement_class) {
   if (get_parent_class($replacement_class) == $definition['class']) {
-    $plugin_definition['class'] = $replacement_class;
+    $definition['class'] = $replacement_class;
   }
   return $definition['class'];
 }

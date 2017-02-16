@@ -2,7 +2,7 @@
 Feature: An entity browser for image fields
 
   Scenario: Uploading an image through the image browser
-    Given I am logged in as a user with the page_creator role
+    Given I am logged in as a user with the page_creator,media_creator roles
     When I visit "/node/add/page"
     And I open the "Hero Image" image browser
     And I click "Upload"
